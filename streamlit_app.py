@@ -2,17 +2,13 @@ import streamlit as st
 from langchain import LLMChain, PromptTemplate
 from langchain.llms import OpenAI
 
-# Load your OpenAI API key from Streamlit secrets
-API_KEY = st.secrets["OPENAI_API_KEY"]
-
-# Initialize the OpenAI model
-llm = OpenAI(api_key=API_KEY)
-
-# Streamlit app title
 st.title("Airline Feedback")
 
-# Text input for user experience
-user_input = st.text_area("Share with us your experience of your latest trip.")
+prompt = st.text_input("Share with us your experience of your latest trip.", "My last trip was")
+
+### Load your API Key
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+
 
 # Function to determine the response based on user feedback
 def analyze_feedback(feedback):
