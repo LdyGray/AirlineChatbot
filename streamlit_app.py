@@ -1,44 +1,51 @@
 import streamlit as st
-from openai import OpenAI
-import os
+from langchain import LLMChain, PromptTemplate
+from langchain.llms import OpenAI
 
-# Show title and description.
-st.title("💬 Airline Chatbot")
-st.write(
-    "Homework Week 3 3.1 "
-)
-API_KEY = st.secrets["openai"]["OPENAI_API_KEY"]
-### OpenAI stuff: Creative: High temperature
-client = OpenAI()
-response = client.chat.completions.create(
-  model="gpt-4o-mini",
-  messages=[
-    {"role": "system", "content": "Complete the following prefix"},
-    {"role": "user", "content": prompt}
-  ],
-  temperature = 1.8,
-  max_tokens=20
-)
+# Load your OpenAI API key from Streamlit secrets
+API_KEY = st.secrets["openai"]["api_key"]
 
-### Display
-st.write(
-    "Creative: " + response.choices[0].message.content
-)
+# Initialize the OpenAI model
+llm = OpenAI(api_key=API_KEY)
 
+# Streamlit app title
+st.title("Customer Experience Feedback")
 
-### OpenAI stuff: Predictable: Low temperature
-client = OpenAI()
-response = client.chat.completions.create(
-  model="gpt-4o-mini",
-  messages=[
-    {"role": "system", "content": "Complete the following prefix"},
-    {"role": "user", "content": prompt}
-  ],
-  temperature = 0.2,
-  max_tokens=20
-)
+# Text input for user experience
+user_input = st.text_area("Share with us your experience of the latest trip.", "")
 
-### Display
-st.write(
-    "Predictable: " + response.choices[0].message.content
-)
+# Function to determine the response based on user feedback
+def analyze_feedback(feedback):
+    # Prompt to analyze feedback
+    prompt = f"""
+    Analyze the following user feedback and classify it:
+    - Identify if the experience was positive or negative.
+    - If negative, determine the cause of dissatisfaction.
+    - Possible causes include: 
+      1. Airline's fault (e.g., lost luggage).
+      2. Beyond airline's control (e.g., weather-related delays).
+    
+    Feedback: "{feedback}"
+    """
+
+    # Create a chain with the prompt
+    chain = LLMChain(llm=llm, prompt=PromptTemplate(template=prompt))
+    response = chain.run()
+    return response
+
+# Button to process feedback
+if st.button("Submit Feedback"):
+    if user_input:
+        result = analyze_feedback(user_input)
+        
+        # Determine the response based on analysis
+        if "positive" in result.lower():
+            st.success("Thank you for your feedback and for choosing to fly with us!")
+        elif "airline's fault" in result.lower():
+            st.warning("We're sorry to hear about your experience. Our customer service will contact you soon to resolve the issue or provide compensation.")
+        elif "beyond airline's control" in result.lower():
+            st.info("We understand your frustration, but please note that the airline is not liable in situations beyond our control.")
+        else:
+            st.error("Could not determine the nature of your feedback. Please try again.")
+    else:
+        st.warning("Please enter your feedback before submitting.")
