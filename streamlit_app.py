@@ -1,7 +1,6 @@
 import streamlit as st
 from openai import OpenAI
 import os
-from langchain.output_parsers import StrOutputParser
 
 # Show title and description.
 st.title("💬 Airline Chatbot")
